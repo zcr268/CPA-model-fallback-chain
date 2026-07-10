@@ -66,6 +66,13 @@ jobs:
           go mod tidy
           go mod download
 
+      - name: Set up C cross-compiler
+        if: matrix.goos == 'linux' && matrix.goarch == 'arm64'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu
+          echo "CC=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
+
       - name: Build shared library
         env:
           GOOS: ${{ matrix.goos }}
