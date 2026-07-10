@@ -83,13 +83,29 @@ func runFallbackChain(ctx context.Context, cfg pluginConfig, req rpcExecutorRequ
 	chain := findMatchingChain(cfg, routeReq)
 	if chain == nil {
 		// No chain matched — pass through to host model execution with original model.
-		return hostExecute(ctx, req, req.Model, stream)
+		payload, status, errPass := hostExecute(ctx, req, req.Model, stream)
+		if errPass != nil || isRetryableStatus(status) {
+			return nil, nil, errPass
+		}
+		contentType := "application/json"
+		if stream {
+			contentType = "text/event-stream"
+		}
+		return payload, http.Header{"Content-Type": []string{contentType}}, nil
 	}
 
 	backends := availableBackends(cfg, chain, routeReq.AvailableProviders, tracker)
 	if len(backends) == 0 {
 		// All backends penalized or unavailable — try host default with original model.
-		return hostExecute(ctx, req, req.Model, stream)
+		payload, status, errPass := hostExecute(ctx, req, req.Model, stream)
+		if errPass != nil || isRetryableStatus(status) {
+			return nil, nil, errPass
+		}
+		contentType := "application/json"
+		if stream {
+			contentType = "text/event-stream"
+		}
+		return payload, http.Header{"Content-Type": []string{contentType}}, nil
 	}
 
 	var lastErr error

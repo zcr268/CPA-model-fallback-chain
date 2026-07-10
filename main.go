@@ -66,6 +66,8 @@ import (
 
 func main() {}
 
+const pluginIdentifier = "model-fallback-chain"
+
 //export cliproxy_plugin_init
 func cliproxy_plugin_init(host *C.cliproxy_host_api, plugin *C.cliproxy_plugin_api) C.int {
 	if plugin == nil {

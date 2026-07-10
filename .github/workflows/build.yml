@@ -55,7 +55,9 @@ jobs:
         run: |
           # Point the replace directive to the checked-out CLIProxyAPI.
           # Cross-platform: use perl instead of sed for consistent behavior.
+          # On Windows, convert backslash paths to forward slashes for go.mod compatibility.
           CPA_PATH="${{ github.workspace }}/CLIProxyAPI"
+          CPA_PATH="${CPA_PATH//\\//}"
           perl -pi -e "s|=> \.\./CLIProxyAPI|=> ${CPA_PATH}|" go.mod
           cat go.mod
 
