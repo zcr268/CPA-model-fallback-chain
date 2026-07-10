@@ -62,6 +62,9 @@ func configure(raw []byte) error {
 		}
 		cfg = decoded
 	}
+	// Re-initialize the health tracker with the new cooldown and failure threshold.
+	// This is safe because configure runs in the registration path, not during active requests.
+	tracker = newBackendTracker(cfg.PenaltyCooldownSec, cfg.MaxPenaltyFailures)
 	currentConfig.Store(cfg)
 	return nil
 }
