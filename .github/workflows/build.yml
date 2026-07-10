@@ -54,11 +54,15 @@ jobs:
         shell: bash
         run: |
           # Point the replace directive to the checked-out CLIProxyAPI.
-          sed -i 's|=> ../CLIProxyAPI|=> ${{ github.workspace }}/CLIProxyAPI|' go.mod
+          # Cross-platform: use perl instead of sed for consistent behavior.
+          CPA_PATH="${{ github.workspace }}/CLIProxyAPI"
+          perl -pi -e "s|=> \.\./CLIProxyAPI|=> ${CPA_PATH}|" go.mod
           cat go.mod
 
-      - name: Download deps
-        run: go mod download
+      - name: Download deps and generate go.sum
+        run: |
+          go mod tidy
+          go mod download
 
       - name: Build shared library
         env:
