@@ -17,6 +17,33 @@ The plugin uses `host.model.execute` / `host.model.execute_stream` callbacks to 
 to built-in providers, so every backend in the chain is a real provider+model pair that
 CLIProxyAPI already supports.
 
+### Backend model naming
+
+The `model` field in each chain backend should use the **alias** (client-visible name)
+defined in CPA's `openai-compatibility` config, not the upstream provider's raw model
+name. For example, if CPA config has:
+
+```yaml
+openai-compatibility:
+  - name: "omniroute"
+    models:
+      - name: "cw/claude-sonnet-4-6"   # upstream OmniRoute model name
+        alias: "premium-model"          # ← use THIS in chain backend model field
+```
+
+Then the chain backend should specify `model: "premium-model"`, because CPA's model
+registry is keyed by alias and `host.model.execute` resolves aliases to upstream names
+internally. Using the raw upstream name (`cw/claude-sonnet-4-6`) directly will cause
+"unknown provider" errors.
+
+### Stream content anomaly check caveat
+
+For streaming responses, the content anomaly detector checks for `data:` lines with
+non-empty content. Some providers (e.g. minimax) emit initial chunks containing only
+`reasoning_content` without `data:` SSE framing, which can trigger false positives.
+If you see spurious "content anomaly detected" errors with streaming providers, set
+`check_content_anomaly: false` in the plugin config.
+
 ## Chain matching
 
 Each chain has a `match` rule:
