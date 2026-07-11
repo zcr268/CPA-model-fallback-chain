@@ -74,15 +74,18 @@ func (bt *backendTracker) recordFailure(key backendKey) {
 }
 
 // availableBackends filters a chain's backends, returning only those that:
-//  1. Have a matching built-in provider available in the host
-//  2. Are not currently penalized
+//  1. Are not currently penalized
+//
+// Provider availability is intentionally NOT checked here — the host.model.execute
+// callback will fail fast for unknown providers, and the fallback logic in the
+// executor handles that as a normal backend failure. This avoids false negatives
+// when the AvailableProviders metadata is incomplete or uses a different naming
+// convention than the chain config.
 func availableBackends(cfg pluginConfig, chain *chainConfig, availableProviders []string, bt *backendTracker) []backendConfig {
+	_ = availableProviders // unused — see comment above
 	var result []backendConfig
 	for _, b := range chain.Backends {
 		if b.Provider == "" {
-			continue
-		}
-		if !hasProvider(availableProviders, b.Provider) {
 			continue
 		}
 		key := backendKey{provider: b.Provider, model: b.Model}
